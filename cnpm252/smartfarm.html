@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>SmartFarm Dashboard Nông Trại Thông Minh</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Tải Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Cấu hình Tailwind cho font Inter và màu sắc -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+            colors: {
+              // Pantone 2017 - Greenery - Main Success/ON Color
+              primary: "#88B04B",
+              // Dark text/Border color
+              secondary: "#333333",
+              // Soft Light Blue/Gray background
+              background: "#F0F4F8",
+              // White card background
+              card: "#FFFFFF",
+              // Warning/Manual Color
+              warning: "#F9A825",
+              // Danger/OFF Color
+              danger: "#E53935",
+              // Light Blue/Aqua accent (for contrast)
+              "accent-blue": "#AEC6CF",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      /* Định nghĩa kiểu scrollbar cho giao diện sáng */
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: theme("colors.background");
+      }
+      .scroll-bar::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      .scroll-bar::-webkit-scrollbar-track {
+        background: theme("colors.background");
+      }
+      .scroll-bar::-webkit-scrollbar-thumb {
+        background: theme("colors.accent-blue");
+        border-radius: 10px;
+      }
+      .scroll-bar::-webkit-scrollbar-thumb:hover {
+        background: theme("colors.primary");
+      }
+      /* Đảm bảo input time hiển thị tốt */
+      input[type="time"] {
+        appearance: none;
+        -moz-appearance: none;
+        -webkit-appearance: none;
+      }
+    </style>
+  </head>
+
+  <body class="text-gray-800 min-h-screen p-4 sm:p-8 scroll-bar">
+    <div class="max-w-6xl mx-auto">
+      <header class="mb-8">
+        <h1
+          class="text-3xl sm:text-4xl font-extrabold text-primary flex items-center"
+        >
+          <svg
+            class="w-8 h-8 mr-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M16 8v8m-4-8v8m-4-8v8m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            ></path>
+          </svg>
+          SmartFarm Dashboard
+        </h1>
+        <p class="text-gray-600 mt-1">
+          Hệ thống giám sát và điều khiển nông trại thông minh theo thời gian
+          thực.
+        </p>
+      </header>
+
+      <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-6">
+          <div class="bg-card p-6 rounded-xl shadow-lg border border-gray-100">
+            <h2 class="text-2xl font-semibold mb-4 text-primary">
+              Thông tin Thiết bị & Cảm biến
+            </h2>
+
+            <div
+              class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 border-b border-gray-200 pb-4"
+            >
+              <div class="text-lg">
+                <span class="font-medium text-gray-500">UID (MAC):</span>
+                <span id="uid" class="font-mono text-xl text-secondary"
+                  >Đang tải...</span
+                >
+              </div>
+              <div class="text-lg">
+                <span class="font-medium text-gray-500"
+                  >Trạng thái kết nối:</span
+                >
+                <span id="connectionStatus" class="font-bold text-red-500"
+                  >Mất kết nối</span
+                >
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div
+                class="bg-accent-blue/20 p-4 rounded-lg text-center transition duration-300 hover:bg-accent-blue/30 border border-accent-blue/50"
+              >
+                <p class="text-3xl font-bold text-red-600 mb-1" id="temp">--</p>
+                <p class="text-sm text-gray-600">🌡 Nhiệt độ (°C)</p>
+              </div>
+
+              <div
+                class="bg-accent-blue/20 p-4 rounded-lg text-center transition duration-300 hover:bg-accent-blue/30 border border-accent-blue/50"
+              >
+                <p class="text-3xl font-bold text-blue-600 mb-1" id="humi">
+                  --
+                </p>
+                <p class="text-sm text-gray-600">💧 Ẩm không khí (%)</p>
+              </div>
+
+              <div
+                class="bg-accent-blue/20 p-4 rounded-lg text-center transition duration-300 hover:bg-accent-blue/30 border border-accent-blue/50"
+              >
+                <p class="text-3xl font-bold text-yellow-600 mb-1" id="lux">
+                  --
+                </p>
+                <p class="text-sm text-gray-600">🔆 Ánh sáng (Lux/ADC)</p>
+              </div>
+
+              <div
+                class="bg-accent-blue/20 p-4 rounded-lg text-center transition duration-300 hover:bg-accent-blue/30 border border-accent-blue/50"
+              >
+                <p class="text-3xl font-bold text-primary mb-1" id="soil">--</p>
+                <p class="text-sm text-gray-600">🌱 Độ ẩm đất (ADC)</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-card p-6 rounded-xl shadow-lg border border-gray-100">
+            <h2 class="text-2xl font-semibold mb-4 text-primary">
+              Điều khiển & Trạng thái hiện tại
+            </h2>
+
+            <div class="space-y-6">
+              <div>
+                <div class="flex justify-between items-center mb-2">
+                  <p class="text-lg font-medium">💡 Đèn:</p>
+                  <span
+                    id="lightState"
+                    class="px-3 py-1 rounded-full text-sm font-semibold text-white bg-gray-400"
+                    >--</span
+                  >
+                </div>
+                <div class="flex flex-wrap gap-3">
+                  <button
+                    class="btn-action bg-primary hover:bg-green-700 text-white"
+                    data-name="light"
+                    data-val="1"
+                  >
+                    BẬT
+                  </button>
+                  <button
+                    class="btn-action bg-danger hover:bg-red-700 text-white"
+                    data-name="light"
+                    data-val="0"
+                  >
+                    TẮT
+                  </button>
+                </div>
+              </div>
+              <!-- QUẠT -->
+
+              <div>
+                <div class="flex justify-between items-center mb-2">
+                  <p class="text-lg font-medium">🚰 Bơm nước (mode):</p>
+                  <span
+                    id="pumpMode"
+                    class="px-3 py-1 rounded-full text-sm font-semibold text-white bg-gray-400"
+                    >--</span
+                  >
+                </div>
+                <div class="flex flex-wrap gap-3">
+                  <button
+                    class="btn-action bg-danger hover:bg-red-700 text-white"
+                    data-name="pump"
+                    data-val="off"
+                  >
+                    Tắt
+                  </button>
+                  <button
+                    class="btn-action bg-warning hover:bg-yellow-700 text-black"
+                    data-name="pump"
+                    data-val="manual"
+                  >
+                    Bật tay
+                  </button>
+                  <button
+                    class="btn-action bg-primary hover:bg-green-700 text-white"
+                    data-name="pump"
+                    data-val="auto"
+                  >
+                    Auto theo đất
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between items-center mb-2">
+                  <p class="text-lg font-medium">🔔 Còi báo:</p>
+                  <span
+                    id="buzzerState"
+                    class="px-3 py-1 rounded-full text-sm font-semibold text-white bg-gray-400"
+                    >--</span
+                  >
+                </div>
+                <div class="flex flex-wrap gap-3">
+                  <button
+                    class="btn-action bg-primary hover:bg-green-700 text-white"
+                    data-name="buzzer"
+                    data-val="1"
+                  >
+                    BẬT
+                  </button>
+                  <button
+                    class="btn-action bg-danger hover:bg-red-700 text-white"
+                    data-name="buzzer"
+                    data-val="0"
+                  >
+                    TẮT
+                  </button>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between items-center mb-2">
+                  <p class="text-lg font-medium">🌀 Quạt:</p>
+                  <span
+                    id="fanState"
+                    class="px-3 py-1 rounded-full text-sm font-semibold text-white bg-gray-400"
+                    >--</span
+                  >
+                </div>
+                <div class="flex flex-wrap gap-3">
+                  <button
+                    class="btn-action bg-danger text-white"
+                    data-name="fan"
+                    data-val="off"
+                  >
+                    Tắt
+                  </button>
+                  <button
+                    class="btn-action bg-warning text-black"
+                    data-name="fan"
+                    data-val="manual"
+                  >
+                    Bật tay
+                  </button>
+                  <button
+                    class="btn-action bg-primary text-white"
+                    data-name="fan"
+                    data-val="auto"
+                  >
+                    Auto theo nhiệt
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-1 space-y-6">
+          <div class="bg-card p-6 rounded-xl shadow-lg border border-gray-100">
+            <h2 class="text-2xl font-semibold mb-4 text-primary">
+              ⚙️ Cấu hình Auto/Hẹn giờ
+            </h2>
+
+            <div class="mb-6 pb-4 border-b border-gray-200">
+              <label for="soilTh" class="block text-sm font-medium mb-2"
+                >Ngưỡng ẩm đất (0–4095 ADC)</label
+              >
+              <p class="text-xs text-gray-500 mb-2">
+                Bơm bật nếu độ ẩm đất đo được nhỏ hơn ngưỡng này (Chế độ Auto)
+              </p>
+              <div class="flex space-x-2">
+                <input
+                  id="soilTh"
+                  type="number"
+                  min="0"
+                  max="4095"
+                  value="1500"
+                  class="form-input bg-gray-100 text-gray-800 p-2 rounded-lg w-full focus:ring-primary focus:border-primary border-gray-300"
+                  placeholder="e.g. 1500"
+                />
+                <button
+                  class="btn-save bg-primary hover:bg-green-700 text-white w-24"
+                  onclick="saveConfig('soilTh')"
+                >
+                  Lưu
+                </button>
+              </div>
+            </div>
+
+            <!-- Cài đặt đèn theo thời gian (HH:mm) -->
+            <div>
+              <p class="text-sm font-medium mb-2">Hẹn giờ Đèn (Giờ:Phút):</p>
+              <div class="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                  <label for="onTime" class="block text-xs text-gray-500 mb-1"
+                    >Thời gian Bật (HH:mm)</label
+                  >
+                  <input
+                    id="onTime"
+                    type="time"
+                    class="form-input bg-gray-100 text-gray-800 p-2 rounded-lg w-full focus:ring-primary focus:border-primary border-gray-300"
+                  />
+                </div>
+                <div>
+                  <label for="offTime" class="block text-xs text-gray-500 mb-1"
+                    >Thời gian Tắt (HH:mm)</label
+                  >
+                  <input
+                    id="offTime"
+                    type="time"
+                    class="form-input bg-gray-100 text-gray-800 p-2 rounded-lg w-full focus:ring-primary focus:border-primary border-gray-300"
+                  />
+                </div>
+              </div>
+              <button
+                class="btn-save bg-primary hover:bg-green-700 text-white w-full"
+                onclick="saveConfig('lightSchedule')"
+              >
+                Lưu Hẹn giờ
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-card p-6 rounded-xl shadow-lg border border-gray-100">
+            <h2 class="text-2xl font-semibold mb-4 text-warning">
+              🛠 Cấu hình Thiết bị (ESP32)
+            </h2>
+            <p class="text-xs text-gray-500 mb-4">
+              Các thay đổi này sẽ được ESP32 sử dụng khi khởi động lại hoặc đọc
+              từ cấu hình.
+            </p>
+
+            <div class="space-y-4">
+              <div>
+                <label for="cfg_deviceId" class="block text-sm font-medium mb-1"
+                  >ID Thiết bị (UID mới)</label
+                >
+                <input
+                  id="cfg_deviceId"
+                  type="text"
+                  class="form-input bg-gray-100 text-gray-800 p-2 rounded-lg w-full focus:ring-warning focus:border-warning border-gray-300"
+                  placeholder="MAC hoặc ID duy nhat (VD: FARM_001)"
+                />
+              </div>
+
+              <div>
+                <label
+                  for="cfg_publishInterval"
+                  class="block text-sm font-medium mb-1"
+                  >Chu kỳ gửi dữ liệu (giây)</label
+                >
+                <input
+                  id="cfg_publishInterval"
+                  type="number"
+                  min="10"
+                  max="3600"
+                  value="60"
+                  class="form-input bg-gray-100 text-gray-800 p-2 rounded-lg w-full focus:ring-warning focus:border-warning border-gray-300"
+                  placeholder="e.g. 60"
+                />
+              </div>
+            </div>
+
+            <button
+              class="btn-save bg-warning hover:bg-yellow-700 text-black w-full mt-6"
+              onclick="saveConfig('deviceSettings')"
+            >
+              LƯU CẤU HÌNH THIẾT BỊ
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div
+      id="toast"
+      class="fixed bottom-5 right-5 z-50 transition-opacity duration-300 opacity-0 pointer-events-none"
+    >
+      <div
+        class="p-3 rounded-xl shadow-xl flex items-center space-x-3 max-w-sm"
+        id="toastContent"
+      >
+        <!-- Content will be injected here -->
+      </div>
+    </div>
+
+    <style>
+      .btn-action,
+      .btn-save {
+        padding: 10px 18px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        transition:
+          background-color 0.2s,
+          transform 0.1s;
+      }
+      .btn-action:active,
+      .btn-save:active {
+        transform: scale(0.98);
+      }
+    </style>
+    <script type="module">
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+            import {
+              getDatabase,
+              ref,
+              child,
+              onValue,
+              update,
+              off,
+            } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+            const firebaseConfig = {
+              apiKey: "AIzaSyB3iSrRgGOms2TRwAxZbO1Cv7b6wrhldLA",
+              authDomain: "smartfarms-27323.firebaseapp.com",
+              databaseURL: "https://smartfarms-27323-default-rtdb.firebaseio.com",
+              projectId: "smartfarms-27323",
+              storageBucket: "smartfarms-27323.appspot.com",
+              messagingSenderId: "320755880584",
+              appId: "1:320755880584:web:21a95339088bc6a970c53d",
+            };
+
+            const app = initializeApp(firebaseConfig);
+            const db = getDatabase(app);
+
+
+      <!-- Thay đổi UID mặc định tại đây nếu cần -->
+
+
+            let UID = "DCB4D91454A8";
+            const uidElement = document.getElementById("uid");
+            const baseRef = () => ref(db, "devices/" + UID);
+            let lightMode = "manual";
+            let sensorListener = null;
+            let actuatorListener = null;
+            let configListener = null;
+
+            function showToast(message, type = "success") {
+              const toast = document.getElementById("toast");
+              const toastContent = document.getElementById("toastContent");
+              let bgColor, icon, textColor;
+
+              if (type === "success") {
+                bgColor = "bg-primary";
+                textColor = "text-white";
+                icon =
+                  '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+              } else if (type === "error") {
+                bgColor = "bg-danger";
+                textColor = "text-white";
+                icon =
+                  '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+              } else if (type === "info") {
+                bgColor = "bg-warning";
+                textColor = "text-black";
+                icon =
+                  '<svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+              }
+
+              toastContent.className = `p-3 rounded-xl shadow-xl flex items-center space-x-3 max-w-sm ${bgColor} ${textColor}`;
+              toastContent.innerHTML = `${icon}<p class="font-medium">${message}</p>`;
+
+              toast.classList.remove("opacity-0", "pointer-events-none");
+              toast.classList.add("opacity-100");
+
+              setTimeout(() => {
+                toast.classList.remove("opacity-100");
+                toast.classList.add("opacity-0", "pointer-events-none");
+              }, 3000);
+            }
+            window.showToast = showToast;
+
+            function updateActuatorState(name, state) {
+              const elem = document.getElementById(`${name}State`);
+              if (!elem) return;
+
+              if (state === null || state === undefined) {
+                elem.innerText = "--";
+                elem.classList.remove(
+                  "bg-primary",
+                  "bg-warning",
+                  "bg-danger",
+                  "text-black",
+                  "text-white"
+                );
+                elem.classList.add("bg-gray-400", "text-white");
+                return;
+              }
+
+              elem.classList.remove(
+                "bg-primary",
+                "bg-warning",
+                "bg-danger",
+                "bg-gray-400",
+                "text-black",
+                "text-white"
+              );
+
+              if (name === "light" || name === "buzzer") {
+                const isOn = state === 1 || state === true;
+                elem.innerText = isOn ? "BẬT" : "TẮT";
+                elem.classList.add(isOn ? "bg-primary" : "bg-danger", "text-white");
+              } else if (name === "pump") {
+                let text, bgColor, textColorClass;
+                switch (state) {
+                  case "manual":
+                    text = "BẬT TAY";
+                    bgColor = "bg-warning";
+                    textColorClass = "text-black";
+                    break;
+                  case "auto":
+                    text = "AUTO";
+                    bgColor = "bg-primary";
+                    textColorClass = "text-white";
+                    break;
+                  case "off":
+                  default:
+                    text = "TẮT";
+                    bgColor = "bg-danger";
+                    textColorClass = "text-white";
+                    break;
+                }
+                elem.innerText = text;
+                elem.classList.add(bgColor, textColorClass);
+              } else if (name === "fan") {
+                let text, bg, color;
+                switch (state) {
+                  case "manual":
+                    text = "BẬT TAY";
+                    bg = "bg-warning";
+                    color = "text-black";
+                    break;
+                  case "auto":
+                    text = "AUTO";
+                    bg = "bg-primary";
+                    color = "text-white";
+                    break;
+                  default:
+                    text = "TẮT";
+                    bg = "bg-danger";
+                    color = "text-white";
+                    break;
+                }
+                elem.innerText = text;
+                elem.classList.add(bg, color);
+              }
+            }
+
+            function stopFirebaseListeners() {
+              if (sensorListener) off(sensorListener);
+              if (actuatorListener) off(actuatorListener);
+              if (configListener) off(configListener);
+              sensorListener = null;
+              actuatorListener = null;
+              configListener = null;
+            }
+
+            function startFirebaseListeners() {
+              stopFirebaseListeners();
+
+              sensorListener = onValue(child(baseRef(), "sensors"), (snap) => {
+                if (!snap.exists()) {
+                  document.getElementById("connectionStatus").className =
+                    "font-bold text-red-600";
+                  document.getElementById("connectionStatus").innerText =
+                    "Mất kết nối";
+                  return;
+                }
+                document.getElementById("connectionStatus").className =
+                  "font-bold text-primary";
+                document.getElementById("connectionStatus").innerText = "Đã kết nối";
+                const v = snap.val();
+                document.getElementById("temp").innerText = v.temp
+                  ? v.temp.toFixed(1)
+                  : "--";
+                document.getElementById("humi").innerText = v.humi
+                  ? v.humi.toFixed(1)
+                  : "--";
+                document.getElementById("lux").innerText = v.lux ?? "--";
+                document.getElementById("soil").innerText = v.soil ?? "--";
+              });
+
+              actuatorListener = onValue(child(baseRef(), "actuators"), (snap) => {
+                if (!snap.exists()) {
+                  updateActuatorState("light", null);
+                  updateActuatorState("buzzer", null);
+                  updateActuatorState("pump", null);
+                  updateActuatorState("fan", null);
+                  return;
+                }
+                const a = snap.val();
+                updateActuatorState("light", a.light);
+                updateActuatorState("buzzer", a.buzzer);
+                updateActuatorState("pump", a.pump);
+                updateActuatorState("fan", a.fan);
+              });
+
+              configListener = onValue(child(baseRef(), "config"), (snap) => {
+                if (!snap.exists()) return;
+                const cfg = snap.val();
+
+                document.getElementById("soilTh").value = cfg.soilThreshold ?? 1500;
+                document.getElementById("onTime").value = cfg.lightOnTime ?? "06:00";
+                document.getElementById("offTime").value =
+                  cfg.lightOffTime ?? "20:00";
+
+                lightMode = cfg.lightMode || "manual";
+
+                document.getElementById("cfg_deviceId").value = cfg.deviceId ?? UID;
+                document.getElementById("cfg_publishInterval").value =
+                  cfg.publishIntervalSec ?? 60;
+
+                if (cfg.deviceId && cfg.deviceId !== UID) {
+                  UID = cfg.deviceId;
+                  uidElement.innerText = UID;
+                  startFirebaseListeners();
+                }
+              });
+            }
+
+            uidElement.innerText = UID;
+            startFirebaseListeners();
+
+            function setAct(name, val) {
+              let actualVal = val;
+              if (
+                (name === "light" || name === "buzzer") &&
+                (val === "1" || val === 1)
+              ) {
+                actualVal = 1;
+              } else if (
+                (name === "light" || name === "buzzer") &&
+                (val === "0" || val === 0)
+              ) {
+                actualVal = 0;
+              }
+
+              if (name === "light") {
+                const actRef = child(baseRef(), "actuators");
+                const cfgRef = child(baseRef(), "config");
+
+                const cfgUpdate =
+                  lightMode === "auto"
+                    ? update(cfgRef, { lightMode: "manual" })
+                    : Promise.resolve();
+
+                Promise.all([update(actRef, { light: actualVal }), cfgUpdate])
+                  .then(() => {
+                    if (lightMode === "auto") {
+                      lightMode = "manual";
+                      showToast("Đã chuyển đèn sang MANUAL và gửi lệnh.", "info");
+                    } else {
+                      showToast("Đã gửi lệnh điều khiển đèn.", "success");
+                    }
+                  })
+                  .catch((e) => {
+                    console.error("ERR:", e);
+                    showToast("Lỗi khi điều khiển đèn.", "error");
+                  });
+
+                return;
+              }
+
+              update(child(baseRef(), "actuators"), { [name]: actualVal })
+                .then(() => {
+                  showToast(`Đã gửi lệnh điều khiển ${name}.`, "success");
+                })
+                .catch((e) => {
+                  console.error("ERR:", e);
+                  showToast(`Lỗi khi gửi lệnh điều khiển ${name}.`, "error");
+                });
+            }
+
+            document.querySelectorAll(".btn-action").forEach((button) => {
+              button.addEventListener("click", () => {
+                const name = button.getAttribute("data-name");
+                const val = button.getAttribute("data-val");
+                setAct(name, val);
+              });
+            });
+
+            function saveConfig(settingType) {
+              let updates = {};
+              let successMessage = "";
+
+              if (settingType === "soilTh") {
+                const v = parseInt(document.getElementById("soilTh").value);
+                if (isNaN(v) || v < 0 || v > 4095) {
+                  showToast(
+                    "Ngưỡng ẩm đất phải là số hợp lệ từ 0 đến 4095.",
+                    "error"
+                  );
+                  return;
+                }
+                updates.soilThreshold = v;
+                successMessage = "Đã lưu ngưỡng ẩm đất thành công.";
+              } else if (settingType === "lightSchedule") {
+                const onTime = document.getElementById("onTime").value;
+                const offTime = document.getElementById("offTime").value;
+
+                if (!onTime || !offTime) {
+                  showToast(
+                    "Thời gian bật/tắt phải được điền đầy đủ (HH:mm).",
+                    "error"
+                  );
+                  return;
+                }
+
+                updates.lightOnTime = onTime;
+                updates.lightOffTime = offTime;
+
+                updates.lightMode = "auto";
+                lightMode = "auto";
+
+                successMessage = "Đã lưu cấu hình hẹn giờ đèn (AUTO).";
+              }
+
+              update(child(baseRef(), "config"), updates)
+                .then(() => {
+                  showToast(successMessage, "success");
+                })
+                .catch((e) => {
+                  console.error(e);
+                  showToast("Lỗi khi lưu cấu hình!", "error");
+                });
+            }
+
+            window.log = console.log;
+            window.saveConfig = saveConfig;
+            window.setAct = setAct;
+    </script>
+  </body>
+</html>
