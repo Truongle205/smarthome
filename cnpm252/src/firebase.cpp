@@ -59,6 +59,12 @@ static bool httpGET(const String& url, String* resp = nullptr) {
     return (code >= 200 && code < 300);
 }
 
+static void clearPomodoroCommand() {
+    if (DEVICE_NODE.isEmpty() || g_idToken.length() < 10) return;
+    String url = String(FIREBASE_DB_URL) + DEVICE_NODE + "/actuators.json?auth=" + g_idToken;
+    httpPATCH(url, "{\"pomodoroCmd\":\"\"}");
+}
+
 // UC: Anonymous sign-in to Firebase 
 bool firebaseAnonSignIn() {
     String url  = "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key="
@@ -89,7 +95,7 @@ bool firebasePatchAll() {
 
     String url = String(FIREBASE_DB_URL) + DEVICE_NODE + ".json?auth=" + g_idToken;
 
-    StaticJsonDocument<768> doc;
+    StaticJsonDocument<1024> doc;
     doc["ts"] = (uint32_t)(millis() / 1000); // Timestamp (seconds since boot)
 
     // Sensors data
@@ -98,6 +104,7 @@ bool firebasePatchAll() {
     s["humi"] = isnan(v_humi) ? -1.0f : v_humi;
     s["lux"]  = v_lux;
     s["ldrDock"] = v_ldrDock;
+    s["soil"] = v_lux; // UI compatibility: no soil sensor in current use case
     s["doorOpen"] = v_doorOpen ? 1 : 0;
     s["phoneOnDock"] = phoneIsOnDock() ? 1 : 0;
 
@@ -178,11 +185,16 @@ void firebasePullActuators() {
         else                     fanSetMode(FAN_OFF);
     }
 
-    // UC6: Pomodoro command
+    // UC6: Pomodoro command. Clear command after handling to avoid restarting every pull.
     if (!doc["pomodoroCmd"].isNull()) {
         String cmd = doc["pomodoroCmd"].as<String>();
-        if      (cmd == "start") pomodoroStart();
-        else if (cmd == "stop")  pomodoroStop();
+        if (cmd == "start") {
+            pomodoroStart();
+            clearPomodoroCommand();
+        } else if (cmd == "stop") {
+            pomodoroStop();
+            clearPomodoroCommand();
+        }
     }
 }
 
